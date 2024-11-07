@@ -5,6 +5,7 @@ from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry  # Import Odometry for position tracking
 import numpy as np
 import matplotlib.pyplot as plt
+import TrajectoryTracker
 
 class WallFollowingObstacleAvoidance(Node):
     def __init__(self):
