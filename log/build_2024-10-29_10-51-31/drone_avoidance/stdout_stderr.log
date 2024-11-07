@@ -1,0 +1,23 @@
+running egg_info
+writing ../../build/drone_avoidance/drone_avoidance.egg-info/PKG-INFO
+writing dependency_links to ../../build/drone_avoidance/drone_avoidance.egg-info/dependency_links.txt
+writing entry points to ../../build/drone_avoidance/drone_avoidance.egg-info/entry_points.txt
+writing requirements to ../../build/drone_avoidance/drone_avoidance.egg-info/requires.txt
+writing top-level names to ../../build/drone_avoidance/drone_avoidance.egg-info/top_level.txt
+reading manifest file '../../build/drone_avoidance/drone_avoidance.egg-info/SOURCES.txt'
+writing manifest file '../../build/drone_avoidance/drone_avoidance.egg-info/SOURCES.txt'
+running build
+running build_py
+copying drone_avoidance/object_avoidance.py -> /home/tugberk/Desktop/ROS-test/build/drone_avoidance/build/lib/drone_avoidance
+running install
+running install_lib
+copying /home/tugberk/Desktop/ROS-test/build/drone_avoidance/build/lib/drone_avoidance/object_avoidance.py -> /home/tugberk/Desktop/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance
+byte-compiling /home/tugberk/Desktop/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance/object_avoidance.py to object_avoidance.cpython-310.pyc
+running install_data
+copying launch/avoidance_simulation.launch.py -> /home/tugberk/Desktop/ROS-test/install/drone_avoidance/share/drone_avoidance/launch
+running install_egg_info
+removing '/home/tugberk/Desktop/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/drone_avoidance/drone_avoidance.egg-info to /home/tugberk/Desktop/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance-0.0.0-py3.10.egg-info
+running install_scripts
+Installing object_avoidance script to /home/tugberk/Desktop/ROS-test/install/drone_avoidance/lib/drone_avoidance
+writing list of installed files to '/home/tugberk/Desktop/ROS-test/build/drone_avoidance/install.log'

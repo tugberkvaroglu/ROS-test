@@ -1,0 +1,3 @@
+[console_scripts]
+object_avoidance = drone_avoidance.object_avoidance:main
+
