@@ -8,6 +8,7 @@ setup.py
 ../../build/drone_avoidance/drone_avoidance.egg-info/requires.txt
 ../../build/drone_avoidance/drone_avoidance.egg-info/top_level.txt
 ../../build/drone_avoidance/drone_avoidance.egg-info/zip-safe
+drone_avoidance/TrajectoryTracker.py
 drone_avoidance/__init__.py
 drone_avoidance/object_avoidance.py
 launch/avoidance_simulation.launch.py

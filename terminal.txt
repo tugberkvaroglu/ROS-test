@@ -1,4 +1,4 @@
-source /opt/humble/ros/setup.bash
+source /opt/ros/humble/setup.bash
 source install/setup.bash
 
 
@@ -11,4 +11,4 @@ colcon build
 
 
 
-ros2 run drone_avoidance object_avoidance
+ros2 launch drone_avoidance avoidance_simulation.launch.py
