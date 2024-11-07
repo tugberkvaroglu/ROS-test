@@ -76,8 +76,16 @@ class WallFollowingObstacleAvoidance(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = WallFollowingObstacleAvoidance()
-    rclpy.spin(node)
-    rclpy.shutdown()
-
+    
+    trajectory_tracker = TrajectoryTracker()
+    odom_sub = node.create_subscription(Odometry, 'odom', trajectory_tracker.odom_callback, 10)
+    
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        trajectory_tracker.plot_trajectory()  # Plot trajectory after stopping
+    finally:
+        rclpy.shutdown()
+        
 if __name__ == '__main__':
     main()
