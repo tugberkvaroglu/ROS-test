@@ -1,0 +1,3 @@
+- robotun koordinatlarını numpy ile alıp görüntüle
+
+- lidar verisinden engelin surfaceini almaya çalış.
