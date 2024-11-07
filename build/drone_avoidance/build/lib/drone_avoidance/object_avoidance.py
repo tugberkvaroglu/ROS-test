@@ -2,6 +2,9 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
+from nav_msgs.msg import Odometry  # Import Odometry for position tracking
+import numpy as np
+import matplotlib.pyplot as plt
 
 class WallFollowingObstacleAvoidance(Node):
     def __init__(self):
@@ -73,11 +76,58 @@ class WallFollowingObstacleAvoidance(Node):
         # Log avoidance state for debugging
         self.get_logger().info(f'Avoiding Obstacle: {self.avoiding_obstacle}, Following Wall: {self.following_wall}')
 
+class TrajectoryTracker:
+    def __init__(self):
+        self.positions = []  # Store robot's x, y positions
+
+    def odom_callback(self, msg):
+        # Extract x and y position from the Odometry message
+        x = msg.pose.pose.position.x
+        y = msg.pose.pose.position.y
+        self.positions.append((x, y))
+
+    def plot_trajectory(self):
+        if len(self.positions) > 1:
+            positions = np.array(self.positions)
+            plt.figure(figsize=(8, 6))
+            plt.plot(positions[:, 0], positions[:, 1], label='Robot Trajectory')
+            plt.xlabel('X Position (m)')
+            plt.ylabel('Y Position (m)')
+            plt.title('Robot Trajectory in Simulation')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+        else:
+            print("Not enough data to plot trajectory.")
+
 def main(args=None):
+    # Initialize the ROS 2 Python client library
     rclpy.init(args=args)
+    
+    # Create an instance of your wall-following node
     node = WallFollowingObstacleAvoidance()
-    rclpy.spin(node)
-    rclpy.shutdown()
+    
+    # Initialize the trajectory tracker instance
+    trajectory_tracker = TrajectoryTracker()
+    
+    # Subscribe to the 'odom' topic using the node's subscription method
+    # This will call the odom_callback method in TrajectoryTracker
+    odom_sub = node.create_subscription(
+        Odometry,                        # Message type
+        'odom',                          # Topic name
+        trajectory_tracker.odom_callback, # Callback function
+        10                               # QoS (queue size)
+    )
+    
+    # Keep the node spinning to process messages
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        # Plot trajectory when user stops the program
+        trajectory_tracker.plot_trajectory()
+    finally:
+        # Shutdown the node gracefully
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
