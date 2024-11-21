@@ -6,7 +6,7 @@ def generate_launch_description():
     return LaunchDescription([
         # Launch Gazebo with the modified world
         ExecuteProcess(
-            cmd=['gazebo', '--verbose', '/home/tugberk/Desktop/ROS-test/src/drone_avoidance/worlds/obstacle_world.sdf'],
+            cmd=['gazebo', '--verbose', '/home/tugberk/Desktop/Projects/ROS-test/src/drone_avoidance/worlds/obstacle_world.sdf'],
             output='screen'
         ),
         # Run the obstacle avoidance node
