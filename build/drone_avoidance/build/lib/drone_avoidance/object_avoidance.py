@@ -93,13 +93,44 @@ class WallFollowingObstacleAvoidance(Node):
             return 0.5 * heading_error  # Proportional gain factor
         return 0.0
 
+class TrajectoryTracker:
+    def __init__(self):
+        self.positions = []  # Store robot's x, y positions
+
+    def odom_callback(self, msg):
+        # Extract x and y position from the Odometry message
+        x = msg.pose.pose.position.x
+        y = msg.pose.pose.position.y
+        self.positions.append((x, y))
+
+    def plot_trajectory(self):
+        if len(self.positions) > 1:
+            positions = np.array(self.positions)
+            plt.figure(figsize=(8, 6))
+            plt.plot(positions[:, 0], positions[:, 1], label='Robot Trajectory')
+            plt.xlabel('X Position (m)')
+            plt.ylabel('Y Position (m)')
+            plt.title('Robot Trajectory in Simulation')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+        else:
+            print("Not enough data to plot trajectory.")
+
 # Main function to run the node
 def main(args=None):
     rclpy.init(args=args)
     node = WallFollowingObstacleAvoidance()
-
+    trajectory_tracker = TrajectoryTracker()
+    odom_sub = node.create_subscription(
+        Odometry,                        # Message type
+        'odom',                          # Topic name
+        trajectory_tracker.odom_callback, # Callback function
+        10                               # QoS (queue size)
+    )
     try:
         rclpy.spin(node)
+        trajectory_tracker.plot_trajectory()
     except KeyboardInterrupt:
         pass
     finally:
