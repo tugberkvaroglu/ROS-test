@@ -19,9 +19,22 @@ class WallFollowingObstacleAvoidance(Node):
         self.following_wall = False
         self.initial_heading = None  # Will store initial yaw angle
         self.current_heading = 0.0  # Track current yaw angle
+        self.starting_x = None  # Track the robot's starting x position
+        self.current_x = 0.0  # Track the current x position
+        self.passed_starting_x = False  # Flag to track if the robot has passed the starting x position
 
     def odom_callback(self, msg):
-        # Extract yaw from the Odometry quaternion
+        # Extract x, y, and yaw from the Odometry message
+        self.current_x = msg.pose.pose.position.x  # Update current x position
+        self.current_y = msg.pose.pose.position.y
+
+        if self.starting_x is None:
+            self.starting_x = self.current_x  # Store the starting x position
+
+        # Update passed_starting_x flag if the robot crosses the starting x position
+        if self.starting_x is not None and self.current_x > self.starting_x:
+            self.passed_starting_x = True
+
         orientation_q = msg.pose.pose.orientation
         _, _, yaw = self.euler_from_quaternion(orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w)
         self.current_heading = yaw
@@ -48,16 +61,19 @@ class WallFollowingObstacleAvoidance(Node):
 
     def scan_callback(self, msg):
         # Define three regions based on the laser scan ranges
-        left_distances = msg.ranges[45:135]  # Left side
-        front_distances = msg.ranges[0:45]  # Front
+        left_distances = msg.ranges[60:135]  # Left side
+        front_distances = msg.ranges[0:60]  # Front
         right_distances = msg.ranges[135:179]  # Right side
 
         min_left = min(left_distances) if left_distances else float('inf')
         min_front = min(front_distances) if front_distances else float('inf')
         min_right = min(right_distances) if right_distances else float('inf')
 
+        # Logging the distances for debugging
+        self.get_logger().info(f'Left: {min_left}, Front: {min_front}, Right: {min_right}')
+
         obstacle_distance = 1.0
-        wall_following_distance = 0.5
+        wall_following_distance = 0.6
 
         if min_front <= obstacle_distance:
             self.avoiding_obstacle = True
@@ -70,21 +86,33 @@ class WallFollowingObstacleAvoidance(Node):
                 self.twist.linear.x = 0.3
                 self.twist.angular.z = -0.2
             elif min_left > wall_following_distance:
-                self.twist.linear.x = 0.3
-                self.twist.angular.z = 0.2
+                self.twist.linear.x = 0.4
+                self.twist.angular.z = 0.3
             else:
                 self.twist.linear.x = 0.3
-                self.twist.angular.z = 0.0
+                self.twist.angular.z = 0.2
 
             if min_front > obstacle_distance and min_left > obstacle_distance:
                 self.avoiding_obstacle = False
                 self.following_wall = False
 
         else:
-            self.twist.linear.x = 0.3
-            self.twist.angular.z = self.correct_heading()
+            if self.should_correct_trajectory():  # Check if the robot should correct its trajectory
+                self.twist.linear.x = 0.3
+                self.twist.angular.z = self.correct_heading()
+            else:
+                self.twist.linear.x = 0.3
+                self.twist.angular.z = 0.0
 
         self.cmd_pub.publish(self.twist)
+    
+    def should_correct_trajectory(self, threshold=0.1):
+        """
+        Check if the robot is near or has passed the starting x position.
+        :param threshold: Acceptable difference to consider "near"
+        :return: True if near starting x or has passed it, False otherwise
+        """
+        return self.passed_starting_x or abs(self.current_x - self.starting_x) <= threshold
 
     def correct_heading(self):
         """Correct the robot's heading to align with the initial heading."""
@@ -113,7 +141,8 @@ class TrajectoryTracker:
             plt.title('Robot Trajectory in Simulation')
             plt.legend()
             plt.grid(True)
-            plt.show()
+            plt.savefig("/home/tugberk/Desktop/Projects/ROS-test/src/drone_avoidance/plots/trajectory.png")
+            plt.close()
         else:
             print("Not enough data to plot trajectory.")
 
@@ -130,10 +159,10 @@ def main(args=None):
     )
     try:
         rclpy.spin(node)
-        trajectory_tracker.plot_trajectory()
     except KeyboardInterrupt:
         pass
     finally:
+        trajectory_tracker.plot_trajectory()
         rclpy.shutdown()
 
 if __name__ == '__main__':
