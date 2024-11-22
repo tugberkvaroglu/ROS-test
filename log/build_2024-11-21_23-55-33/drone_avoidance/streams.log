@@ -1,0 +1,24 @@
+[2.496s] Invoking command in '/home/tugberk/Desktop/Projects/ROS-test/src/drone_avoidance': PYTHONPATH=/home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/tugberk/Desktop/Projects/ROS-test/install/drone_avoidance/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/drone_avoidance build --build-base /home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/build install --record /home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/install.log --single-version-externally-managed install_data
+[3.604s] running egg_info
+[3.606s] writing ../../build/drone_avoidance/drone_avoidance.egg-info/PKG-INFO
+[3.607s] writing dependency_links to ../../build/drone_avoidance/drone_avoidance.egg-info/dependency_links.txt
+[3.607s] writing entry points to ../../build/drone_avoidance/drone_avoidance.egg-info/entry_points.txt
+[3.608s] writing requirements to ../../build/drone_avoidance/drone_avoidance.egg-info/requires.txt
+[3.609s] writing top-level names to ../../build/drone_avoidance/drone_avoidance.egg-info/top_level.txt
+[3.615s] reading manifest file '../../build/drone_avoidance/drone_avoidance.egg-info/SOURCES.txt'
+[3.618s] writing manifest file '../../build/drone_avoidance/drone_avoidance.egg-info/SOURCES.txt'
+[3.618s] running build
+[3.618s] running build_py
+[3.619s] copying drone_avoidance/object_avoidance.py -> /home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/build/lib/drone_avoidance
+[3.620s] running install
+[3.621s] running install_lib
+[3.624s] copying /home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/build/lib/drone_avoidance/object_avoidance.py -> /home/tugberk/Desktop/Projects/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance
+[3.626s] byte-compiling /home/tugberk/Desktop/Projects/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance/object_avoidance.py to object_avoidance.cpython-310.pyc
+[3.631s] running install_data
+[3.631s] running install_egg_info
+[3.639s] removing '/home/tugberk/Desktop/Projects/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance-0.0.0-py3.10.egg-info' (and everything under it)
+[3.640s] Copying ../../build/drone_avoidance/drone_avoidance.egg-info to /home/tugberk/Desktop/Projects/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance-0.0.0-py3.10.egg-info
+[3.642s] running install_scripts
+[3.713s] Installing object_avoidance script to /home/tugberk/Desktop/Projects/ROS-test/install/drone_avoidance/lib/drone_avoidance
+[3.714s] writing list of installed files to '/home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/install.log'
+[3.776s] Invoked command in '/home/tugberk/Desktop/Projects/ROS-test/src/drone_avoidance' returned '0': PYTHONPATH=/home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/tugberk/Desktop/Projects/ROS-test/install/drone_avoidance/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/drone_avoidance build --build-base /home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/build install --record /home/tugberk/Desktop/Projects/ROS-test/build/drone_avoidance/install.log --single-version-externally-managed install_data
