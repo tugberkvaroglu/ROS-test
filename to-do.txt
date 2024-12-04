@@ -1,3 +1,3 @@
-- robotun koordinatlarını numpy ile alıp görüntüle
+2 sn sonra önünde bir şey yoksa 90 derece döndür, sonra başlangıç x kordinatına gelince geri 90 derece döndür.
 
-- lidar verisinden engelin surfaceini almaya çalış.
+herkes kendi yaptığı kısımları yazacak. min 5 maks 20 sayfa. 

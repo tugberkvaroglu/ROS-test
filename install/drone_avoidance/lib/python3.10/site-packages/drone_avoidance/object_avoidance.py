@@ -17,6 +17,7 @@ class WallFollowingObstacleAvoidance(Node):
         self.twist = Twist()
         self.avoiding_obstacle = False
         self.following_wall = False
+        self.recovering_position = False  # New flag for recovery phase
         self.initial_heading = None  # Will store initial yaw angle
         self.current_heading = 0.0  # Track current yaw angle
         self.starting_x = None  # Track the robot's starting x position
@@ -60,52 +61,74 @@ class WallFollowingObstacleAvoidance(Node):
         return roll, pitch, yaw
 
     def scan_callback(self, msg):
-        # Define three regions based on the laser scan ranges
-        left_distances = msg.ranges[60:135]  # Left side
-        front_distances = msg.ranges[0:60]  # Front
-        right_distances = msg.ranges[135:179]  # Right side
+        # Define regions based on the laser scan ranges
+        front_distances = msg.ranges[0:60] + msg.ranges[300:359]  # Front view
+        left_distances = msg.ranges[60:120]  # Left side
+        right_distances = msg.ranges[240:300]  # Right side
 
-        min_left = min(left_distances) if left_distances else float('inf')
         min_front = min(front_distances) if front_distances else float('inf')
+        min_left = min(left_distances) if left_distances else float('inf')
         min_right = min(right_distances) if right_distances else float('inf')
 
-        # Logging the distances for debugging
+        # Log the distances for debugging
         self.get_logger().info(f'Left: {min_left}, Front: {min_front}, Right: {min_right}')
 
-        obstacle_distance = 1.0
-        wall_following_distance = 0.6
+        # Thresholds
+        obstacle_distance = 0.8  # Reduced threshold for better reaction
+        wall_following_distance = 0.7  # Desired distance for wall following
+        y_return_threshold = 0.3  # Stricter constraint for returning to y-axis
 
-        if min_front <= obstacle_distance:
-            self.avoiding_obstacle = True
-            self.following_wall = True
-            self.twist.linear.x = 0.0
-            self.twist.angular.z = -0.5
+        # Check if the robot should align with the y-axis
+        if abs(self.current_y - 0.0) > y_return_threshold and not self.avoiding_obstacle and not self.following_wall:
+            self.get_logger().info(f'Returning to y-axis. Current x: {self.current_x}, Current y: {self.current_y}')
 
-        elif self.avoiding_obstacle and self.following_wall:
-            if min_left <= wall_following_distance:
-                self.twist.linear.x = 0.3
-                self.twist.angular.z = -0.2
-            elif min_left > wall_following_distance:
-                self.twist.linear.x = 0.4
-                self.twist.angular.z = 0.3
+            # Check if the robot is aligned with the y-axis
+            heading_towards_y_axis = abs(self.current_heading) < 0.1 or abs(self.current_heading - math.pi) < 0.1
+
+            if not heading_towards_y_axis:
+                # Turn the robot to face the y-axis
+                self.twist.linear.x = 0.0  # Stop linear movement while turning
+                self.twist.angular.z = 0.5  # Rotate to align with y-axis
             else:
-                self.twist.linear.x = 0.3
-                self.twist.angular.z = 0.2
-
-            if min_front > obstacle_distance and min_left > obstacle_distance:
-                self.avoiding_obstacle = False
-                self.following_wall = False
-
+                # Move forward towards the y=0 axis
+                self.twist.linear.x = 0.3  # Move forward
+                self.twist.angular.z = 0.0  # Stop turning
         else:
-            if self.should_correct_trajectory():  # Check if the robot should correct its trajectory
-                self.twist.linear.x = 0.3
-                self.twist.angular.z = self.correct_heading()
+            # Normal obstacle avoidance and wall-following behavior
+            if min_front <= obstacle_distance:
+                # Obstacle detected directly in front
+                self.avoiding_obstacle = True
+                self.following_wall = True
+                self.twist.linear.x = 0.0
+                self.twist.angular.z = -0.6  # Turn away from the obstacle (increased speed)
+            elif self.avoiding_obstacle and self.following_wall:
+                # Continue wall-following behavior
+                if min_left <= wall_following_distance:
+                    # Adjust to stay at a safe distance from the wall
+                    self.twist.linear.x = 0.3
+                    self.twist.angular.z = -0.2
+                elif min_left > wall_following_distance:
+                    # Steer closer to the wall
+                    self.twist.linear.x = 0.3
+                    self.twist.angular.z = 0.3
+                else:
+                    # Default forward movement with slight adjustment
+                    self.twist.linear.x = 0.3
+                    self.twist.angular.z = 0.2
+
+                # Check if obstacle avoidance is complete
+                if min_front > obstacle_distance and min_left > obstacle_distance:
+                    self.avoiding_obstacle = False
+                    self.following_wall = False
             else:
-                self.twist.linear.x = 0.3
+                # Normal movement when no obstacle is detected
+                self.twist.linear.x = 0.4  # Slightly faster normal speed
                 self.twist.angular.z = 0.0
 
         self.cmd_pub.publish(self.twist)
-    
+
+
+
     def should_correct_trajectory(self, threshold=0.1):
         """
         Check if the robot is near or has passed the starting x position.
