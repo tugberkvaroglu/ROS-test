@@ -17,13 +17,11 @@ class WallFollowingObstacleAvoidance(Node):
         self.twist = Twist()
         self.avoiding_obstacle = False
         self.following_wall = False
-        self.recovering_position = False  # New flag for recovery phase
         self.initial_heading = None  # Will store initial yaw angle
         self.current_heading = 0.0  # Track current yaw angle
         self.starting_x = None  # Track the robot's starting x position
-        self.starting_y = None  # Track the robot's starting x position
         self.current_x = 0.0  # Track the current x position
-        self.passed_starting_y = False  # Flag to track if the robot has passed the starting x position
+        self.passed_starting_x = False  # Flag to track if the robot has passed the starting x position
 
     def odom_callback(self, msg):
         # Extract x, y, and yaw from the Odometry message
@@ -33,12 +31,9 @@ class WallFollowingObstacleAvoidance(Node):
         if self.starting_x is None:
             self.starting_x = self.current_x  # Store the starting x position
 
-        if self.starting_y is None:
-            self.starting_y = self.current_y  # Store the starting x position
-
         # Update passed_starting_x flag if the robot crosses the starting x position
-        if self.starting_y is not None and self.current_y > self.starting_y:
-            self.passed_starting_y = True
+        if self.starting_x is not None and self.current_x > self.starting_x:
+            self.passed_starting_x = True
 
         orientation_q = msg.pose.pose.orientation
         _, _, yaw = self.euler_from_quaternion(orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w)
@@ -65,10 +60,10 @@ class WallFollowingObstacleAvoidance(Node):
         return roll, pitch, yaw
 
     def scan_callback(self, msg):
-        # Define regions based on the laser scan ranges
-        front_distances = msg.ranges[0:60] + msg.ranges[300:359]  # Front view
-        left_distances = msg.ranges[60:120]  # Left side
-        right_distances = msg.ranges[240:300]  # Right side
+        # Define three regions based on the laser scan ranges
+        left_distances = msg.ranges[60:135]  # Left side
+        front_distances = msg.ranges[0:60]  # Front
+        right_distances = msg.ranges[135:179]  # Right side
 
         min_left = min(left_distances) if left_distances else float('inf')
         min_front = min(front_distances) if front_distances else float('inf')
@@ -100,27 +95,24 @@ class WallFollowingObstacleAvoidance(Node):
             if min_front > obstacle_distance and min_left > obstacle_distance:
                 self.avoiding_obstacle = False
                 self.following_wall = False
-                self.recovering_position = True  # Start recovery phase
-
-        elif self.recovering_position:
-            # Recovery phase: Align with the y-axis, move to the starting y-axis, and reorient
-            self.perform_recovery()
 
         else:
-            self.twist.linear.x = 0.3
-            self.twist.angular.z = 0.0
+            if self.should_correct_trajectory():  # Check if the robot should correct its trajectory
+                self.twist.linear.x = 0.3
+                self.twist.angular.z = self.correct_heading()
+            else:
+                self.twist.linear.x = 0.3
+                self.twist.angular.z = 0.0
 
         self.cmd_pub.publish(self.twist)
-
-
-
+    
     def should_correct_trajectory(self, threshold=0.1):
         """
         Check if the robot is near or has passed the starting x position.
         :param threshold: Acceptable difference to consider "near"
         :return: True if near starting x or has passed it, False otherwise
         """
-        return self.passed_starting_y or abs(self.current_y - self.starting_y) <= threshold
+        return self.passed_starting_x or abs(self.current_x - self.starting_x) <= threshold
 
     def correct_heading(self):
         """Correct the robot's heading to align with the initial heading."""
@@ -128,18 +120,6 @@ class WallFollowingObstacleAvoidance(Node):
             heading_error = self.initial_heading - self.current_heading
             return 0.5 * heading_error  # Proportional gain factor
         return 0.0
-    
-    def perform_recovery(self):
-        """Perform recovery phase to return to the starting y-axis and original heading."""
-        if abs(self.current_y - self.starting_y) > 0.1:  # Move towards starting y-axis
-            self.get_logger().info(f"current y: {self.current_y}, starting y:{self.starting_y}")
-            for i in range(4):
-                self.twist.angular.z = 0.2
-            else:
-                # Recovery complete; resume normal behavior
-                self.recovering_position = False
-                self.twist.linear.x = 0.3
-                self.twist.angular.z = 0.0
 
 class TrajectoryTracker:
     def __init__(self):
