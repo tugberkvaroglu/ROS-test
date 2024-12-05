@@ -1,0 +1,5 @@
+  File "/home/tugberk/Desktop/Projects/ROS-test/install/drone_avoidance/lib/python3.10/site-packages/drone_avoidance/object_avoidance.py", line 78
+    self.get_logger().info(f'Left: {min_left}, Front: {min_front}, Right: {min_right}, 
+                           ^
+SyntaxError: unterminated string literal (detected at line 78)
+
