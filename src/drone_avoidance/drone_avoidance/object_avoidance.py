@@ -73,7 +73,6 @@ class WallFollowingObstacleAvoidance(Node):
         self.get_logger().info(f'Left: {min_left}, Front: {min_front}, Right: {min_right}')
 
         obstacle_distance = 1.0
-        wall_following_distance = 0.6
 
         if min_front <= obstacle_distance:
             self.avoiding_obstacle = True
@@ -82,6 +81,7 @@ class WallFollowingObstacleAvoidance(Node):
             self.twist.angular.z = -0.5
 
         elif self.avoiding_obstacle and self.following_wall:
+            wall_following_distance = 0.6
             if min_left <= wall_following_distance:
                 self.twist.linear.x = 0.3
                 self.twist.angular.z = -0.2
@@ -98,11 +98,21 @@ class WallFollowingObstacleAvoidance(Node):
 
         else:
             if self.should_correct_trajectory():  # Check if the robot should correct its trajectory
+                self.get_logger().info("Correcting Headding")
                 self.twist.linear.x = 0.3
                 self.twist.angular.z = self.correct_heading()
             else:
-                self.twist.linear.x = 0.3
-                self.twist.angular.z = 0.0
+                self.get_logger().info("Going to the Y axis.")
+                # Calculate the angle to the y-axis
+                desired_heading = math.atan2(-self.current_y, 0)  # Heading towards y=0
+                heading_error = desired_heading - self.current_heading
+
+                # Apply proportional control for smoother turning
+                angular_velocity = 0.5 * heading_error
+
+                self.twist.linear.x = 0.3  # Maintain forward movement
+                self.twist.angular.z = angular_velocity
+
 
         self.cmd_pub.publish(self.twist)
     
@@ -112,7 +122,17 @@ class WallFollowingObstacleAvoidance(Node):
         :param threshold: Acceptable difference to consider "near"
         :return: True if near starting x or has passed it, False otherwise
         """
-        return self.passed_starting_x or abs(self.current_x - self.starting_x) <= threshold
+        # Add a condition to exit trajectory correction after a certain time or condition
+        if self.passed_starting_x:
+            self.get_logger().info("Passed starting x. No longer correcting trajectory.")
+            return False  # Stop correcting once the robot has passed the starting x position
+
+        if abs(self.current_x - self.starting_x) <= threshold:
+            self.get_logger().info("Near starting x. Correcting trajectory.")
+            return True  # Correct trajectory if near starting x
+
+        self.get_logger().info("No correction needed.")
+        return False
 
     def correct_heading(self):
         """Correct the robot's heading to align with the initial heading."""
@@ -123,6 +143,8 @@ class WallFollowingObstacleAvoidance(Node):
 
 class TrajectoryTracker:
     def __init__(self):
+        self.correction_timeout = 2.0  # Maximum time to stay in trajectory correction mode
+        self.correction_start_time = None
         self.positions = []  # Store robot's x, y positions
 
     def odom_callback(self, msg):
