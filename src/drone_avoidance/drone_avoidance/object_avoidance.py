@@ -108,38 +108,65 @@ class WallFollowingObstacleAvoidance(Node):
                 heading_error = desired_heading - self.current_heading
 
                 # Apply proportional control for smoother turning
-                angular_velocity = 0.5 * heading_error
+                # make the angular velocity descent
+                angular_velocity = 0.3 * heading_error + 0.1 * self.twist.angular.z
+
 
                 self.twist.linear.x = 0.3  # Maintain forward movement
-                self.twist.angular.z = angular_velocity
+                self.twist.angular.z = 0.0 if abs(angular_velocity) < 0.1 else angular_velocity
 
 
         self.cmd_pub.publish(self.twist)
     
-    def should_correct_trajectory(self, threshold=0.1):
+    def should_correct_trajectory(self, threshold=0.05, threshold_exit=0.1):
         """
         Check if the robot is near or has passed the starting x position.
-        :param threshold: Acceptable difference to consider "near"
-        :return: True if near starting x or has passed it, False otherwise
+        :param threshold: Acceptable difference to consider "near" (entry threshold).
+        :param threshold_exit: Larger acceptable difference to consider "far" (exit threshold).
+        :return: True if correction is needed, False otherwise.
         """
-        # Add a condition to exit trajectory correction after a certain time or condition
         if self.passed_starting_x:
-            self.get_logger().info("Passed starting x. No longer correcting trajectory.")
-            return False  # Stop correcting once the robot has passed the starting x position
+            # Allow correction for a short distance beyond the starting position
+            if abs(self.current_x - self.starting_x) <= threshold_exit:
+                self.get_logger().info("Passed starting x but still near. Correcting trajectory.")
+                return True
+            else:
+                self.get_logger().info("Passed starting x and far away. No correction needed.")
+                return False
 
+        # Check if the robot is near the starting x position
         if abs(self.current_x - self.starting_x) <= threshold:
             self.get_logger().info("Near starting x. Correcting trajectory.")
-            return True  # Correct trajectory if near starting x
+            return True
 
+        # Default case: No correction needed
         self.get_logger().info("No correction needed.")
         return False
 
     def correct_heading(self):
-        """Correct the robot's heading to align with the initial heading."""
+        """Correct the robot's heading to align with the initial heading using a gradient-descent-like approach."""
         if self.initial_heading is not None:
-            heading_error = self.initial_heading - self.current_heading
-            return 0.5 * heading_error  # Proportional gain factor
+            heading_error = self.normalize_angle(self.initial_heading - self.current_heading)
+
+            # Gradual reduction of correction (gradient descent-like)
+            learning_rate = 0.3  # Determines the reduction rate for yaw correction
+            correction = learning_rate * heading_error
+
+            # Apply a maximum limit to correction to avoid aggressive turns
+            max_correction = 0.1  # Limit the maximum yaw correction
+            correction = max(-max_correction, min(correction, max_correction))
+
+            return correction
+
         return 0.0
+
+    def normalize_angle(self, angle):
+        """Normalize an angle to the range [-pi, pi]."""
+        while angle > math.pi:
+            angle -= 2 * math.pi
+        while angle < -math.pi:
+            angle += 2 * math.pi
+        return angle
 
 class TrajectoryTracker:
     def __init__(self):
